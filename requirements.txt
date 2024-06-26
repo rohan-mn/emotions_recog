@@ -1,0 +1,6 @@
+Flask==2.3.2
+opencv-python-headless==4.5.5.64
+numpy==1.24.2
+keras==2.15.0
+tensorflow==2.15.0
+gunicorn==20.1.0
