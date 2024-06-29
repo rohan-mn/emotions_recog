@@ -6,8 +6,10 @@ from flask import Flask, render_template, Response
 import cv2
 import numpy as np
 from keras.models import load_model
+import logging
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 # Define the image dimensions
 img_height = 48
@@ -15,7 +17,11 @@ img_width = 48
 
 # Load the pre-trained model
 model_path = 'facialemotionmodel.h5'
-model = load_model(model_path)
+try:
+    model = load_model(model_path)
+    logging.info("Model loaded successfully")
+except Exception as e:
+    logging.error(f"Error loading model: {e}")
 
 # Define emotion labels
 emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
@@ -45,28 +51,32 @@ cap = cv2.VideoCapture(0)
 
 def gen_frames():
     while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
+        try:
+            ret, frame = cap.read()
+            if not ret:
+                logging.error("Failed to capture frame from webcam")
+                break
 
-        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-        faces = face_cascade.detectMultiScale(gray_frame, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+            faces = face_cascade.detectMultiScale(gray_frame, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
 
-        for (x, y, w, h) in faces:
-            face = frame[y:y+h, x:x+w]
-            face_input = preprocess_input(face)
-            emotion_prediction = model.predict(face_input)
-            max_index = np.argmax(emotion_prediction[0])
-            emotion = emotion_labels[max_index]
-            color = emotion_colors[emotion]
-            cv2.rectangle(frame, (x, y), (x+w, y+h), color, 2)
-            cv2.putText(frame, emotion, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, color, 2)
+            for (x, y, w, h) in faces:
+                face = frame[y:y+h, x:x+w]
+                face_input = preprocess_input(face)
+                emotion_prediction = model.predict(face_input)
+                max_index = np.argmax(emotion_prediction[0])
+                emotion = emotion_labels[max_index]
+                color = emotion_colors[emotion]
+                cv2.rectangle(frame, (x, y), (x+w, y+h), color, 2)
+                cv2.putText(frame, emotion, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, color, 2)
 
-        ret, buffer = cv2.imencode('.jpg', frame)
-        frame = buffer.tobytes()
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+            ret, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        except Exception as e:
+            logging.error(f"Error in gen_frames: {e}")
 
 @app.route('/')
 def index():
