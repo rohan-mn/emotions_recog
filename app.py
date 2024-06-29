@@ -1,13 +1,11 @@
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Suppress TensorFlow logging
-os.environ['TF_TRT_ALLOW_SOFT_PLACEMENT'] = '1'  # Allow soft placement for TensorRT
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ['TF_TRT_ALLOW_SOFT_PLACEMENT'] = '1'
 
 from flask import Flask, render_template, Response
 import cv2
 import numpy as np
-import tensorflow as tf
 from keras.models import load_model
-from tensorflow.python.compiler.tensorrt import trt_convert as trt
 
 app = Flask(__name__)
 
@@ -17,20 +15,7 @@ img_width = 48
 
 # Load the pre-trained model
 model_path = 'facialemotionmodel.h5'
-
-# Convert the Keras model to a TensorFlow SavedModel
 model = load_model(model_path)
-saved_model_dir = 'saved_model'
-model.save(saved_model_dir)
-
-# Convert the SavedModel to a TensorRT optimized model
-conversion_params = trt.DEFAULT_TRT_CONVERSION_PARAMS._replace(precision_mode=trt.TrtPrecisionMode.FP16)
-converter = trt.TrtGraphConverterV2(input_saved_model_dir=saved_model_dir, conversion_params=conversion_params)
-converter.convert()
-converter.save(saved_model_dir)
-
-# Load the TensorRT optimized model
-model = tf.saved_model.load(saved_model_dir)
 
 # Define emotion labels
 emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
@@ -71,7 +56,7 @@ def gen_frames():
         for (x, y, w, h) in faces:
             face = frame[y:y+h, x:x+w]
             face_input = preprocess_input(face)
-            emotion_prediction = model(face_input)
+            emotion_prediction = model.predict(face_input)
             max_index = np.argmax(emotion_prediction[0])
             emotion = emotion_labels[max_index]
             color = emotion_colors[emotion]
