@@ -36,7 +36,7 @@
             animation: fadeInDown 1s;
         }
 
-        img {
+        video {
             width: 640px;
             height: 480px;
             border-radius: 0.5rem;
@@ -79,7 +79,16 @@
 <body>
     <div class="container">
         <h1 class="animate__animated animate__fadeInDown">Emotion Detection</h1>
-        <img id="video-feed" class="animate__animated animate__fadeIn" src="{{ url_for('video_feed') }}" alt="Video Feed">
+        <video id="video" autoplay></video>
     </div>
+    <script>
+        async function setupCamera() {
+            const video = document.getElementById('video');
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+        }
+
+        setupCamera().catch(console.error);
+    </script>
 </body>
 </html>
