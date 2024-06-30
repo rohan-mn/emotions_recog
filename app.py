@@ -47,7 +47,7 @@ def preprocess_input(face):
     return face
 
 # Start video capture from the webcam
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(-1)
 
 def gen_frames():
     while True:
