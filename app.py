@@ -47,7 +47,7 @@ def preprocess_input(face):
     return face
 
 def gen_frames():
-    camera = cv2.VideoCapture(0)  # Camera initialization inside the function
+    camera = cv2.VideoCapture(0, cv2.CAP_DSHOW)  # Use CAP_DSHOW backend for video capture
     while True:
         try:
             ret, frame = camera.read()
