@@ -46,13 +46,11 @@ def preprocess_input(face):
     face = np.expand_dims(face, axis=-1)
     return face
 
-# Start video capture from the webcam
-cap = cv2.VideoCapture(-1)
-
 def gen_frames():
+    camera = cv2.VideoCapture(0)  # Camera initialization inside the function
     while True:
         try:
-            ret, frame = cap.read()
+            ret, frame = camera.read()
             if not ret:
                 logging.error("Failed to capture frame from webcam")
                 break
@@ -77,6 +75,8 @@ def gen_frames():
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
         except Exception as e:
             logging.error(f"Error in gen_frames: {e}")
+
+    camera.release()  # Release the camera when done
 
 @app.route('/')
 def index():
