@@ -2,6 +2,23 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 os.environ['TF_TRT_ALLOW_SOFT_PLACEMENT'] = '1'
 
+import subprocess
+import sys
+
+def install(package):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+try:
+    import flask
+    import cv2
+    import numpy
+    import tensorflow
+except ImportError:
+    install("Flask==2.0.1")
+    install("opencv-python-headless==4.5.3.56")
+    install("numpy==1.21.0")
+    install("tensorflow==2.5.0")
+
 from flask import Flask, render_template, Response
 import cv2
 import numpy as np
